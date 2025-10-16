@@ -22,11 +22,11 @@ jobs:
         with:
           node-version: 12 # React Native 0.59 compatible
       
-      - name: Setup Java 8
+      - name: Setup Java 17 for SDK tools
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '8'
+          distribution: temurin
+          java-version: 17
 
       - name: Install dependencies
         run: |
