@@ -1,0 +1,85 @@
+name: Build React Native Android and iOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # -------------------------
+  # Android Build
+  # -------------------------
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 12 # React Native 0.59 compatible
+
+      - name: Install dependencies
+        run: |
+          npm install
+          cd android
+          chmod +x gradlew
+
+      - name: Build Android Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-android
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+  # -------------------------
+  # iOS Build
+  # -------------------------
+  build-ios:
+    runs-on: macos-latest
+    needs: build-android  # optional: run after Android
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 12
+
+      - name: Install dependencies
+        run: |
+          npm install
+          cd ios
+          pod install --repo-update
+
+      - name: Build iOS App (Unsigned)
+        run: |
+          cd ios
+          xcodebuild \
+            -workspace DateTimePicker.xcworkspace \
+            -scheme DateTimePicker \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath $PWD/build/DateTimePicker.xcarchive \
+            archive
+
+          # Export unsigned IPA
+          xcodebuild -exportArchive \
+            -archivePath $PWD/build/DateTimePicker.xcarchive \
+            -exportPath $PWD/build/ \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: Upload iOS IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-ios
+          path: ios/build/*.ipa
