@@ -27,6 +27,11 @@ jobs:
           npm install
           cd android
           chmod +x gradlew
+          
+      - name: Set up Android SDK and compatible NDK
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager "ndk;21.4.7075529"
+          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> android/local.properties
 
       - name: Build Android Release APK
         run: |
